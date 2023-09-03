@@ -28,7 +28,7 @@ void rowSum(unsigned long long &n) {
 
 int main() {
     
-    unsigned long long n = 10000000000;
+    unsigned long long n = 100000000000;
     
     auto start = std::chrono::steady_clock::now();
 

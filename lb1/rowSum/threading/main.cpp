@@ -39,7 +39,7 @@ void rowSum(unsigned long long &n, unsigned long long start, unsigned long long 
 
 int main() {
     
-    unsigned long long n = 10000000000;
+    unsigned long long n = 100000000000;
 
     unsigned int threadsNum = 6;
 
