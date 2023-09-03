@@ -3,26 +3,37 @@
 #include <chrono>
 #include <unistd.h>
 #include <vector>
+#include <mutex>
+
+std::mutex mtx;
 
 void rowSum(unsigned long long &n, unsigned long long start, unsigned long long end) {
+    
+    unsigned long long partial_sum = 0;
     
     for (unsigned long long i = start; i <= end; ++i) {
         if (i > 0) {
             if (i % 2)
-                n += ((i + 1) >> 1) * i;
+                partial_sum += ((i + 1) >> 1) * i;
             else
-                n += (i >> 1) * (i + 1);
-        } else if (i == 0) {
-            n += 1;
-        } else {
+                partial_sum += (i >> 1) * (i + 1);
+        } 
+        else if (i == 0) {
+            partial_sum += 1;
+        } 
+        else {
             unsigned long long temp = -i;
             if (temp % 2)
-                n += ((temp + 1) >> 1) * temp;
+                partial_sum += ((temp + 1) >> 1) * temp;
             else
-                n += (temp >> 1) * (temp + 1);
-            n = 1 - n;
+                partial_sum += (temp >> 1) * (temp + 1);
+            partial_sum = 1 - partial_sum;
         }
     }
+
+    // Lock the mutex to safely update the shared 'n' variable
+    std::lock_guard<std::mutex> lock(mtx);
+    n += partial_sum;
 }
 
 
