@@ -2,7 +2,7 @@
 #include <iostream>
 #include <chrono>
 #include <vector>
-#include <immintrin.h> // Include AVX2 intrinsics header
+#include <immintrin.h>
 
 void rowSum(std::vector<unsigned long long> &res, unsigned long long start, unsigned long long end) {
     unsigned long long tmp = 0;
@@ -18,19 +18,16 @@ void rowSum(std::vector<unsigned long long> &res, unsigned long long start, unsi
 unsigned long long sumVectorAVX2(const std::vector<unsigned long long> &v) {
     unsigned long long sum = 0;
 
-    // Calculate the sum using AVX2
-    __m256i sumVector = _mm256_setzero_si256(); // Initialize a 256-bit vector to zero
+    __m256i sumVector = _mm256_setzero_si256(); 
 
     for (size_t i = 0; i < v.size(); i += 4) {
-        __m256i data = _mm256_loadu_si256((__m256i*)&v[i]); // Load 256 bits of data from the vector
-        sumVector = _mm256_add_epi64(sumVector, data); // Add the data to the sum vector
+        __m256i data = _mm256_loadu_si256((__m256i*)&v[i]); 
+        sumVector = _mm256_add_epi64(sumVector, data); 
     }
 
-    // Extract the sum from the AVX2 vector
     unsigned long long sumArray[4];
     _mm256_storeu_si256((__m256i*)sumArray, sumVector);
 
-    // Sum the four values from the AVX2 vector
     for (int i = 0; i < 4; i++) {
         sum += sumArray[i];
     }
@@ -61,7 +58,6 @@ int main() {
 
     auto end_time = std::chrono::steady_clock::now();
 
-    // Sum the results using AVX2
     unsigned long long res = sumVectorAVX2(results);
 
     std::cout << res << '\n';
