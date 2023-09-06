@@ -1,43 +1,29 @@
-#include <thread>
 #include <iostream>
 #include <chrono>
-#include <unistd.h>
 
-void rowSum(unsigned long long &n) {
-    
-    if (n > 0)
-    {
-        if (n%2)
-            n = ((n+1) >> 1)*n;
-        else
-            n = (n >> 1)*(n+1);
+unsigned long long rowSum(unsigned long long start, unsigned long long end) {
+    unsigned long long sum = 0;
+    for (unsigned long long n = start; n <= end; ++n) {
+        sum += n;
     }
-    else if (n==0) n = 1;
-    else
-    {
-        n = -n;
-        if (n%2)
-            n = ((n+1) >> 1)*n;
-        else
-            n = (n >> 1)*(n+1);
-        n = 1 - n;
-    }
-    
+    return sum;
 }
 
-
 int main() {
-    
-    unsigned long long n = 100000000000;
-    
-    auto start = std::chrono::steady_clock::now();
+    unsigned long long start = 0;
+    unsigned long long end = 10000000000ULL; 
 
-    rowSum(n);
+    auto start_time = std::chrono::steady_clock::now();
 
-    std::cout << n << '\n';
+    unsigned long long res = rowSum(start, end);
 
-    auto end = std::chrono::steady_clock::now();
+    auto end_time = std::chrono::steady_clock::now();
 
-    std::cout << "Время выполнения программы составило " << std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count() << " наносекунд\n";
+    std::cout << res << '\n';
 
+    auto elapsed_time = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+
+    std::cout << "Время выполнения программы составило " << elapsed_time << " миллисекунд\n";
+
+    return 0;
 }
