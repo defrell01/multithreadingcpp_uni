@@ -8,7 +8,7 @@
 #include <cstdint>
 
 
-const int SIZE = 4096;
+const int SIZE = 1024;
 
 void printMatrix(int16_t** matrix)
 {

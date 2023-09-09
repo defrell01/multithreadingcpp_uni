@@ -11,7 +11,7 @@ unsigned long long rowSum(unsigned long long start, unsigned long long end) {
 
 int main() {
     unsigned long long start = 0;
-    unsigned long long end = 10000000000ULL; 
+    unsigned long long end = 10000000000; 
 
     auto start_time = std::chrono::steady_clock::now();
 
