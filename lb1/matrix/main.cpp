@@ -33,7 +33,7 @@ int16_t** generateMatrix(bool empty)
         {
             if (!empty)
             {
-                matrix[i][j] = rand() % 32767; // Generate random int16 values
+                matrix[i][j] = rand() % 32767;
             }
             else
             {
@@ -127,6 +127,25 @@ void multVectorBlock(int16_t** A, int16_t** B, int16_t** C, int startRow, int en
     }
 }
 
+void multVectorBlockScalar(int16_t** A, int16_t** B, int16_t** C, int startRow, int endRow)
+{
+    for (int i = startRow; i < endRow; ++i)
+    {
+        for (int j = 0; j < SIZE; ++j)
+        {
+            int16_t sum = 0;
+
+            for (int k = 0; k < SIZE; ++k)
+            {
+                sum += A[i][k] * B[j][k];
+            }
+
+            C[i][j] = sum;
+        }
+    }
+}
+
+
 bool isEq(int16_t** A, int16_t** B)
 {
     for (int i = 0; i < SIZE; ++i)
@@ -162,7 +181,7 @@ int main()
 
     std::cout << "-------------------------------------------------------------------" << '\n';
 
-    std::cout << "Векторное перемножение+SIMD" << '\n';
+    std::cout << "Векторное перемножение" << '\n';
     std::vector<std::thread> threads;
     std::vector<int16_t**> results(threadsNum);
     int16_t** transposed = transpose(sMatrix);
@@ -171,7 +190,7 @@ int main()
         int startRow = i * SIZE / threadsNum;
         int endRow = (i + 1) * SIZE / threadsNum;
         results[i] = generateMatrix(true);
-        threads.emplace_back(multVectorBlock, fMatrix, transposed, results[i], startRow, endRow);
+        threads.emplace_back(multVectorBlockScalar, fMatrix, transposed, results[i], startRow, endRow);
     }
 
     for (std::thread &thread : threads) {
@@ -194,9 +213,9 @@ int main()
 
     auto stopV = std::chrono::high_resolution_clock::now();
     
-    auto durationV = std::chrono::duration_cast<std::chrono::milliseconds>(stopV - startV);
+    auto durationV = std::chrono::duration_cast<std::chrono::microseconds>(stopV - startV);
     
-    std::cout << "Время исполнения " << durationV.count() << " миллисекунд \n";
+    std::cout << "Время исполнения " << durationV.count() << " микросекунд \n";
 
     std::cout << "Проверка, равны ли матрицы ";
     std::cout << (isEq(fRes, sRes) ? "Да" : "Нет") << '\n';
