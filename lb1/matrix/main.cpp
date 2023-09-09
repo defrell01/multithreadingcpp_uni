@@ -8,7 +8,7 @@
 #include <cstdint>
 
 
-const int SIZE = 1024;
+const int SIZE = 4096;
 
 void printMatrix(int16_t** matrix)
 {
@@ -157,17 +157,17 @@ int main()
     auto startS = std::chrono::high_resolution_clock::now();
     fRes = multScalar(fMatrix, sMatrix, fRes);
     auto stopS = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::seconds>(stopS - startS);
-    std::cout << "Время исполнения " << duration.count() << " секунд " << '\n';
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stopS - startS);
+    std::cout << "Время исполнения " << duration.count() << " миллисекунд " << '\n';
 
     std::cout << "-------------------------------------------------------------------" << '\n';
 
-    std::cout << "Векторное перемножение:" << '\n';
+    std::cout << "Векторное перемножение+SIMD" << '\n';
     std::vector<std::thread> threads;
-    std::vector<int16_t**> results;
+    std::vector<int16_t**> results(threadsNum);
     int16_t** transposed = transpose(sMatrix);
     
-    for (unsigned int i = 0; i < threadsNum; i++pi) {
+    for (unsigned int i = 0; i < threadsNum; i++) {
         int startRow = i * SIZE / threadsNum;
         int endRow = (i + 1) * SIZE / threadsNum;
         results[i] = generateMatrix(true);
@@ -194,12 +194,12 @@ int main()
 
     auto stopV = std::chrono::high_resolution_clock::now();
     
-    auto durationV = std::chrono::duration_cast<std::chrono::seconds>(stopV - startV);
+    auto durationV = std::chrono::duration_cast<std::chrono::milliseconds>(stopV - startV);
     
-    std::cout << "Execution time is " << durationV.count() << " секунд \n";
+    std::cout << "Время исполнения " << durationV.count() << " миллисекунд \n";
 
-    std::cout << "Check if matrices are equal: ";
-    std::cout << (isEq(fRes, sRes) ? "Yes" : "No") << '\n';
+    std::cout << "Проверка, равны ли матрицы ";
+    std::cout << (isEq(fRes, sRes) ? "Да" : "Нет") << '\n';
 
     return 0;
 }
