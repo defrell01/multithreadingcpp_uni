@@ -190,7 +190,7 @@ int main()
         int startRow = i * SIZE / threadsNum;
         int endRow = (i + 1) * SIZE / threadsNum;
         results[i] = generateMatrix(true);
-        threads.emplace_back(multVectorBlockScalar, fMatrix, transposed, results[i], startRow, endRow);
+        threads.emplace_back(multVectorBlock, fMatrix, transposed, results[i], startRow, endRow);
     }
 
     for (std::thread &thread : threads) {
