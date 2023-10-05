@@ -1,32 +1,33 @@
 #include <opencv2/opencv.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
 #include <omp.h>
-
-using namespace cv;
+#include <chrono>
+#include <iostream>
 
 int main()
 {
     // Загрузка изображения
-    Mat image = imread("input.jpg");
+    cv::Mat image = cv::imread("../pics/input.jpg");
 
     if (image.empty())
     {
         std::cerr << "Could not open or find the image." << std::endl;
         return -1;
     }
-
+    auto start = std::chrono::high_resolution_clock::now();
     // Разделение изображения на каналы BGR
-    Mat bgr_channels[3];
-    split(image, bgr_channels);
+    cv::Mat bgr_channels[3];
+    cv::split(image, bgr_channels);
 
     // Создание полутоновых изображений для модифицированного синего и желтого каналов
-    Mat modified_blue = Mat::zeros(image.size(), CV_8UC1);
-    Mat modified_yellow = Mat::zeros(image.size(), CV_8UC1);
+    cv::Mat modified_blue = cv::Mat::zeros(image.size(), CV_8UC1);
+    cv::Mat modified_yellow = cv::Mat::zeros(image.size(), CV_8UC1);
 
+    // omp_set_nested(1);    
+    // omp_set_num_threads(6);
     #pragma omp parallel for
     for (int i = 0; i < image.rows; i++)
-    {
+    {   
+        
         for (int j = 0; j < image.cols; j++)
         {
             int blue = bgr_channels[0].at<uchar>(i, j);
@@ -43,9 +44,15 @@ int main()
         }
     }
 
+    auto stop = std::chrono::high_resolution_clock::now();
+
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop-start);
+
+    std::cout << duration.count() << "\n";
+
     // Сохранение полутоновых изображений
-    imwrite("modified_blue.jpg", modified_blue);
-    imwrite("modified_yellow.jpg", modified_yellow);
+    cv::imwrite("../pics/modified_blue.jpg", modified_blue);
+    cv::imwrite("../pics/modified_yellow.jpg", modified_yellow);
 
     return 0;
 }
