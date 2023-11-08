@@ -43,7 +43,7 @@ int16_t* generateMatrix(bool empty) {
 void matrixMultiplication(int16_t* matrix_a, int16_t* matrix_b, int16_t* matrix_c, int rows) {
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < N; j++) {
-            matrix_c[i * N + j] = 0; // Initialize the result to 0
+            matrix_c[i * N + j] = 0;
             for (int k = 0; k < N; k++) {
                 matrix_c[i * N + j] += matrix_a[i * N + k] * matrix_b[k * N + j];
             }
@@ -115,7 +115,7 @@ int main(int argc, char** argv) {
         auto duration_mult = std::chrono::duration_cast<std::chrono::milliseconds>(stop_mult - start_mult).count();
 
         std::cout << "Время исполнения в многопотоке, мс: " << duration_mult << " \n";
-        // Matrix comparison
+        
         auto start_single = std::chrono::high_resolution_clock::now();
         matrix_single = multiplyMatrices(matrix_a, matrix_b, N);
         auto stop_single = std::chrono::high_resolution_clock::now();

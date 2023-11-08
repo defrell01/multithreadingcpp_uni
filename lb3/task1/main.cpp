@@ -30,7 +30,7 @@ std::string generate_next_password(std::string current_password)
             return current_password;
         }
     }
-    return ""; // Все возможные пароли перебраны
+    return "";
 }
 
 std::string calculate_md5(const std::string &input)
@@ -59,17 +59,17 @@ int main(int argc, char **argv)
     int world_size;
     MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
-    int password_length = 4; // Задайте длину пароля
+    int password_length = 4;
 
     auto start = std::chrono::high_resolution_clock::now();
 
     std::string target_md5 =
-        "a9bf98000f304b48bedde63af949f5bd"; // Замените на целевой хэш
+        "a9bf98000f304b48bedde63af949f5bd";
 
     std::string current_password = "";
     for (int i = 0; i < password_length; i++)
     {
-        current_password += '0'; // Начинаем с минимального значения
+        current_password += '0';
     }
 
     long long iterations = 0;
@@ -87,20 +87,16 @@ int main(int argc, char **argv)
             password_found = true;
         }
 
-        // Распределение работы между процессами MPI
         if (world_rank == 0)
         {
-            // Процесс с рангом 0 генерирует следующий пароль
             current_password = generate_next_password(current_password);
         }
 
-        // Рассылка текущего пароля всем процессам
         MPI_Bcast(&current_password[0], password_length, MPI_CHAR, 0,
                   MPI_COMM_WORLD);
 
         if (password_found)
         {
-            // Сигнализируем о завершении работы другим процессам
             int finished = 1;
             MPI_Bcast(&finished, 1, MPI_INT, 0, MPI_COMM_WORLD);
         }
