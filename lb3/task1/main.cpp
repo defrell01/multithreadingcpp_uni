@@ -5,7 +5,6 @@
 #include <openssl/md5.h>
 #include <string>
 
-// Функция для перебора паролей
 std::string generate_next_password(std::string current_password)
 {
     for (int i = current_password.length() - 1; i >= 0; i--)

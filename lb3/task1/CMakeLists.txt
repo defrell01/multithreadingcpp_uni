@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
+
 project(MPI_Password_Cracker)
 
 find_package(MPI REQUIRED)

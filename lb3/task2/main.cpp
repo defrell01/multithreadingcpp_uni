@@ -123,14 +123,6 @@ int main(int argc, char** argv) {
         std::cout << "Время исполнения в однопотоке, мс: " << duration_single << " \n";
         std::cout << "Проверка, равны ли матрицы: " << (isEq(matrix_c, matrix_single) ? "Да" : "Нет") << '\n';
 
-        // std::cout << "Matrix A:\n";
-        // printMatrix(matrix_a, N, N);
-        // std::cout << "Matrix B:\n";
-        // printMatrix(matrix_b, N, N);
-        // std::cout << "Matrix C (Result):\n";
-        // printMatrix(matrix_c, N, N);
-        // std::cout << "Matrix single (Result):\n";
-        // printMatrix(matrix_single, N, N);
 
         delete[] matrix_a;
         delete[] matrix_b;
