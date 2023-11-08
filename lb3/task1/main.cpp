@@ -59,12 +59,12 @@ int main(int argc, char **argv)
     int world_size;
     MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
-    int password_length = 4;
+    int password_length = 5;
 
     auto start = std::chrono::high_resolution_clock::now();
 
     std::string target_md5 =
-        "a9bf98000f304b48bedde63af949f5bd";
+        "ced457730b69e5dbb59441fb1b08d019";
 
     std::string current_password = "";
     for (int i = 0; i < password_length; i++)
