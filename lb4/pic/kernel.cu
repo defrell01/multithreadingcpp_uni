@@ -48,7 +48,7 @@ int64_t mainLoop(cv::Mat& src, std::string &res, uint save)
     if (save)
     {
         cv::imwrite("../res/" + res + "_blue_channel.jpg", blueChannel);
-        cv::imwrite("../res/" + res + "_blue_channel.jpg", yellowChannel);
+        cv::imwrite("../res/" + res + "_yellow_channel.jpg", yellowChannel);
     }
     
     auto stop = std::chrono::steady_clock::now();
