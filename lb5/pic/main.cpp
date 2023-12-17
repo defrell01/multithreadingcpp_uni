@@ -39,9 +39,6 @@ int mainLoop(cv::Mat& src, std::string& res, bool save)
 
     cl::CommandQueue queue(context, device);
 
-    // Загрузка изображения с помощью OpenCV
-    
-
     // Создание буферов OpenCL
     cl::Buffer clSrc(context, CL_MEM_READ_ONLY, src.total() * src.elemSize());
     cl::Buffer clBlueChannel(context, CL_MEM_WRITE_ONLY, src.total());
