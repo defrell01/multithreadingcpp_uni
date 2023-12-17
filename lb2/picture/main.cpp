@@ -3,16 +3,8 @@
 #include <chrono>
 #include <iostream>
 
-int main()
+int mainLoop(cv::Mat& image, std::string& res, bool save)
 {
-    // Загрузка изображения
-    cv::Mat image = cv::imread("../pics/input.jpg");
-
-    if (image.empty())
-    {
-        std::cerr << "Could not open or find the image." << std::endl;
-        return -1;
-    }
     auto start = std::chrono::high_resolution_clock::now();
     // Разделение изображения на каналы BGR
     cv::Mat bgr_channels[3];
@@ -24,7 +16,7 @@ int main()
 
     // omp_set_nested(1);    
     // omp_set_num_threads(6);
-    #pragma omp parallel for
+    // #pragma omp parallel for
     for (int i = 0; i < image.rows; i++)
     {   
         
@@ -46,13 +38,131 @@ int main()
 
     auto stop = std::chrono::high_resolution_clock::now();
 
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop-start);
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop-start);
 
-    std::cout << duration.count() << "\n";
+    if (save)
+    {
+        cv::imwrite("../res/" + res + "_blue_channel.jpg", modified_blue);
+        cv::imwrite("../res/" + res + "_yellow_channel.jpg", modified_yellow);
+    }
+    
 
-    // Сохранение полутоновых изображений
-    cv::imwrite("../pics/modified_blue.jpg", modified_blue);
-    cv::imwrite("../pics/modified_yellow.jpg", modified_yellow);
+    return duration.count();
+}
 
-    return 0;
+
+int main()
+{
+    std::string input = "../img/16k.jpg";
+    std::string output = "16k";
+    int save = 1;
+
+    cv::Mat src = cv::imread(input);
+    if (src.empty()) {
+        std::cerr << "Error loading the image" << std::endl;
+        return -1;
+    }
+
+    auto start = std::chrono::steady_clock::now();
+
+    for (int i = 0; i < 10; ++i)
+    {
+        int64_t duration = mainLoop(src, output, save);
+        std::cout << "Picture 16k loop " << i + 1 << " duration: " << duration << "ms \n";
+
+        if (i == 0)
+        {
+            save = 0;
+        }
+    }
+
+    auto stop = std::chrono::steady_clock::now();
+
+    std::cout << "16k pic 10 times duration: " << std::chrono::duration_cast<std::chrono::microseconds>(stop - start).count() << " ms\n";
+    std::cout << "\n";
+
+    input = "../img/1.jpg";
+    output = "1";
+    save = 1;
+
+    src = cv::imread(input);
+    if (src.empty()) {
+        std::cerr << "Error loading the image" << std::endl;
+        return -1;
+    }
+
+    start = std::chrono::steady_clock::now();
+
+    for (int i = 0; i < 10; ++i)
+    {
+        int64_t duration = mainLoop(src, output, save);
+        std::cout << "Picture 1 loop " << i + 1 << " duration: " << duration << " ms\n";
+
+        if (i == 0)
+        {
+            save = 0;
+        }
+    }
+
+    stop = std::chrono::steady_clock::now();
+
+    std::cout << "1st pic 10 times duration: " << std::chrono::duration_cast<std::chrono::microseconds>(stop - start).count() << " ms\n";
+
+    std::cout << "\n";
+
+    input = "../img/2.jpg";
+    output = "2";
+    save = 1;
+
+    src = cv::imread(input);
+    if (src.empty()) {
+        std::cerr << "Error loading the image" << std::endl;
+        return -1;
+    }
+
+    start = std::chrono::steady_clock::now();
+
+    for (int i = 0; i < 10; ++i)
+    {
+        int64_t duration = mainLoop(src, output, save);
+        std::cout << "Picture 1 loop " << i + 1 << " duration: " << duration << " ms \n";
+
+        if (i == 0)
+        {
+            save = 0;
+        }
+    }
+
+    stop = std::chrono::steady_clock::now();
+
+    std::cout << "2nd pic 10 times duration: " << std::chrono::duration_cast<std::chrono::microseconds>(stop - start).count() << " ms\n";
+
+    std::cout << "\n";
+
+    input = "../img/3.jpg";
+    output = "3";
+    save = 1;
+
+    src = cv::imread(input);
+    if (src.empty()) {
+        std::cerr << "Error loading the image" << std::endl;
+        return -1;
+    }
+
+    start = std::chrono::steady_clock::now();
+
+    for (int i = 0; i < 10; ++i)
+    {
+        int64_t duration = mainLoop(src, output, save);
+        std::cout << "Picture 3 loop " << i + 1 << " duration: " << duration << " ms\n";
+
+        if (i == 0)
+        {
+            save = 0;
+        }
+    }
+
+    stop = std::chrono::steady_clock::now();
+
+    std::cout << "3rd pic 10 times duration: " << std::chrono::duration_cast<std::chrono::microseconds>(stop - start).count() << " ms\n";
 }
