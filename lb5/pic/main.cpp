@@ -2,8 +2,8 @@
 #include <iostream>
 #include <vector>
 #include <opencv2/opencv.hpp>
+#include <chrono>
 
-// OpenCL ядро для модификации каналов
 const char* kernelSource = R"kernel(
 __kernel void modifyChannels(__global const uchar* src, __global uchar* blueChannel, __global uchar* yellowChannel, int rows, int cols) {
     int x = get_global_id(0);
@@ -21,8 +21,10 @@ __kernel void modifyChannels(__global const uchar* src, __global uchar* blueChan
 }
 )kernel";
 
-int main() {
-    // Инициализация OpenCL
+int mainLoop(cv::Mat& src, std::string& res, bool save)
+{
+    auto start = std::chrono::high_resolution_clock::now();
+    
     std::vector<cl::Platform> platforms;
     cl::Platform::get(&platforms);
     auto platform = platforms.front();
@@ -38,11 +40,7 @@ int main() {
     cl::CommandQueue queue(context, device);
 
     // Загрузка изображения с помощью OpenCV
-    cv::Mat src = cv::imread("../img/1.jpg");
-    if (src.empty()) {
-        std::cerr << "Error loading image" << std::endl;
-        return -1;
-    }
+    
 
     // Создание буферов OpenCL
     cl::Buffer clSrc(context, CL_MEM_READ_ONLY, src.total() * src.elemSize());
@@ -70,8 +68,133 @@ int main() {
     queue.enqueueReadBuffer(clYellowChannel, CL_TRUE, 0, src.total(), yellowChannel.data);
 
     // Сохранение изображений
-    cv::imwrite("../res/blue_channel.jpg", blueChannel);
-    cv::imwrite("../res/yellow_channel.jpg", yellowChannel);
+    if (save)
+    {
+        cv::imwrite("res/" + res + "_blue_channel.jpg", blueChannel);
+        cv::imwrite("res/" + res + "_yellow_channel.jpg", yellowChannel);
+    }
+    
 
-    return 0;
+    auto stop = std::chrono::high_resolution_clock::now();
+
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count();
+
+    return duration;
+}
+
+int main() 
+{
+    std::string input = "img/16k.jpg";
+    std::string output = "16k";
+    int save = 1;
+
+    cv::Mat src = cv::imread(input);
+    if (src.empty()) {
+        std::cerr << "Error loading the image" << std::endl;
+        return -1;
+    }
+
+    auto start = std::chrono::steady_clock::now();
+
+    for (int i = 0; i < 10; ++i)
+    {
+        int64_t duration = mainLoop(src, output, save);
+        std::cout << "Picture 16k loop " << i + 1 << " duration: " << duration << "ms \n";
+
+        if (i == 0)
+        {
+            save = 0;
+        }
+    }
+
+    auto stop = std::chrono::steady_clock::now();
+
+    std::cout << "16k pic 10 times duration: " << std::chrono::duration_cast<std::chrono::microseconds>(stop - start).count() << " ms\n";
+    std::cout << "\n";
+
+    input = "img/1.jpg";
+    output = "1";
+    save = 1;
+
+    src = cv::imread(input);
+    if (src.empty()) {
+        std::cerr << "Error loading the image" << std::endl;
+        return -1;
+    }
+
+    start = std::chrono::steady_clock::now();
+
+    for (int i = 0; i < 10; ++i)
+    {
+        int64_t duration = mainLoop(src, output, save);
+        std::cout << "Picture 1 loop " << i + 1 << " duration: " << duration << " ms\n";
+
+        if (i == 0)
+        {
+            save = 0;
+        }
+    }
+
+    stop = std::chrono::steady_clock::now();
+
+    std::cout << "1st pic 10 times duration: " << std::chrono::duration_cast<std::chrono::microseconds>(stop - start).count() << " ms\n";
+
+    std::cout << "\n";
+
+    input = "img/2.jpg";
+    output = "2";
+    save = 1;
+
+    src = cv::imread(input);
+    if (src.empty()) {
+        std::cerr << "Error loading the image" << std::endl;
+        return -1;
+    }
+
+    start = std::chrono::steady_clock::now();
+
+    for (int i = 0; i < 10; ++i)
+    {
+        int64_t duration = mainLoop(src, output, save);
+        std::cout << "Picture 1 loop " << i + 1 << " duration: " << duration << " ms \n";
+
+        if (i == 0)
+        {
+            save = 0;
+        }
+    }
+
+    stop = std::chrono::steady_clock::now();
+
+    std::cout << "2nd pic 10 times duration: " << std::chrono::duration_cast<std::chrono::microseconds>(stop - start).count() << " ms\n";
+
+    std::cout << "\n";
+
+    input = "img/3.jpg";
+    output = "3";
+    save = 1;
+
+    src = cv::imread(input);
+    if (src.empty()) {
+        std::cerr << "Error loading the image" << std::endl;
+        return -1;
+    }
+
+    start = std::chrono::steady_clock::now();
+
+    for (int i = 0; i < 10; ++i)
+    {
+        int64_t duration = mainLoop(src, output, save);
+        std::cout << "Picture 3 loop " << i + 1 << " duration: " << duration << " ms\n";
+
+        if (i == 0)
+        {
+            save = 0;
+        }
+    }
+
+    stop = std::chrono::steady_clock::now();
+
+    std::cout << "3rd pic 10 times duration: " << std::chrono::duration_cast<std::chrono::microseconds>(stop - start).count() << " ms\n";
+
 }

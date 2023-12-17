@@ -1,83 +1,156 @@
-#include <CL/cl.hpp>
+#include <CL/cl.h>
 #include <iostream>
 #include <vector>
-#include <random>
+#include <ctime>
+#include <stdexcept>
+#include <chrono>
 
-#define BLOCK_SIZE 32
+#define MATRIX_SIZE 1024
 
-const char* kernelSource = R"kernel(
-__kernel void matrixMult(__global const short* A, __global const short* B, __global short* result, const int size) {
-    int bx = get_group_id(0);
-    int by = get_group_id(1);
-    int tx = get_local_id(0);
-    int ty = get_local_id(1);
-
-    int row = by * BLOCK_SIZE + ty;
-    int col = bx * BLOCK_SIZE + tx;
-
-    short sum = 0;
-    if (row < size && col < size) {
-        for (int k = 0; k < size; ++k) {
-            sum += A[row * size + k] * B[k * size + col];
-        }
-        result[row * size + col] = sum;
+// Функция для инициализации матрицы
+void init_matrix(std::vector<cl_short>& matrix) 
+{
+    for (auto& element : matrix) {
+        element = rand() % 10;
     }
 }
-)kernel";
 
-int main() {
-    std::vector<cl::Platform> platforms;
-    cl::Platform::get(&platforms);
-    auto platform = platforms.front();
-
-    std::vector<cl::Device> devices;
-    platform.getDevices(CL_DEVICE_TYPE_GPU, &devices);
-    auto device = devices.front();
-
-    cl::Context context(device);
-
-    cl::Program program(context, kernelSource);
-    program.build("-cl-std=CL1.2");
-
-    cl::CommandQueue queue(context, device);
-
-    int size = 1024;
-    size_t byte_size = size * size * sizeof(short);
-
-    std::vector<short> h_A(size * size);
-    std::vector<short> h_B(size * size);
-    std::vector<short> h_C(size * size);
-
-    // Initialize matrices
-    std::mt19937 rng;
-    rng.seed(std::random_device()());
-    std::uniform_int_distribution<std::mt19937::result_type> dist(0, 99);
-    for (int i = 0; i < size * size; ++i) {
-        h_A[i] = dist(rng);
-        h_B[i] = dist(rng);
+// Функция для вывода матрицы
+void print_matrix(const std::vector<cl_short>& matrix) 
+{
+    for (int i = 0; i < MATRIX_SIZE; ++i) {
+        for (int j = 0; j < MATRIX_SIZE; ++j) {
+            std::cout << matrix[i * MATRIX_SIZE + j] << " ";
+        }
+        std::cout << std::endl;
     }
+}
 
-    cl::Buffer cl_A(context, CL_MEM_READ_ONLY, byte_size);
-    cl::Buffer cl_B(context, CL_MEM_READ_ONLY, byte_size);
-    cl::Buffer cl_C(context, CL_MEM_WRITE_ONLY, byte_size);
+// Функция умножения матриц на CPU
+void cpu_matrix_multiply(const std::vector<cl_short>& A, const std::vector<cl_short>& B, std::vector<cl_short>& C) 
+{
+    for (int i = 0; i < MATRIX_SIZE; ++i) {
+        for (int j = 0; j < MATRIX_SIZE; ++j) {
+            cl_short sum = 0;
+            for (int k = 0; k < MATRIX_SIZE; ++k) {
+                sum += A[i * MATRIX_SIZE + k] * B[k * MATRIX_SIZE + j];
+            }
+            C[i * MATRIX_SIZE + j] = sum;
+        }
+    }
+}
 
-    queue.enqueueWriteBuffer(cl_A, CL_TRUE, 0, byte_size, h_A.data());
-    queue.enqueueWriteBuffer(cl_B, CL_TRUE, 0, byte_size, h_B.data());
+const char* kernelSource = R"(
+    __kernel void matrix_multiply(__global short* A, __global short* B, __global short* C) {
+        int row = get_global_id(0);
+        int col = get_global_id(1);
+        short value = 0;
+        for (int k = 0; k < 1024; ++k) {
+            value += A[row * 1024 + k] * B[k * 1024 + col];
+        }
+        C[row * 1024 + col] = value;
+    }
+    )";
 
-    cl::Kernel kernel(program, "matrixMult");
-    kernel.setArg(0, cl_A);
-    kernel.setArg(1, cl_B);
-    kernel.setArg(2, cl_C);
-    kernel.setArg(3, size);
+int main() 
+{
+    setlocale(LC_ALL, "Ru");
+    // Инициализация матриц
+    
+    for (int i = 0; i < 10; ++i)
+    {
+        std::cout << "Itteration: " << i + 1 << "\n";
 
-    cl::NDRange global(size, size);
-    cl::NDRange local(BLOCK_SIZE, BLOCK_SIZE);
+        std::vector<cl_short> A(MATRIX_SIZE * MATRIX_SIZE);
+        std::vector<cl_short> B(MATRIX_SIZE * MATRIX_SIZE);
+        std::vector<cl_short> C_gpu(MATRIX_SIZE * MATRIX_SIZE);
+        std::vector<cl_short> C_cpu(MATRIX_SIZE * MATRIX_SIZE);
 
-    queue.enqueueNDRangeKernel(kernel, cl::NullRange, global, local);
+        init_matrix(A);
+        init_matrix(B);
 
-    queue.enqueueReadBuffer(cl_C, CL_TRUE, 0, byte_size, h_C.data());
+        auto start_gpu = std::chrono::high_resolution_clock::now();
 
-    // Можно добавить код для проверки корректности результата
+        cl_platform_id platform_id = nullptr;
+        cl_device_id device_id = nullptr;
+        cl_uint ret_num_devices;
+        cl_uint ret_num_platforms;
+        cl_int ret = clGetPlatformIDs(1, &platform_id, &ret_num_platforms);
+        ret = clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_GPU, 1, &device_id, &ret_num_devices);
+
+        cl_context context = clCreateContext(nullptr, 1, &device_id, nullptr, nullptr, &ret);
+        cl_command_queue command_queue = clCreateCommandQueueWithProperties(context, device_id, 0, &ret);
+
+        // Создание буферов для матриц
+        cl_mem a_mem_obj = clCreateBuffer(context, CL_MEM_READ_ONLY, MATRIX_SIZE * MATRIX_SIZE * sizeof(cl_short), nullptr, &ret);
+        cl_mem b_mem_obj = clCreateBuffer(context, CL_MEM_READ_ONLY, MATRIX_SIZE * MATRIX_SIZE * sizeof(cl_short), nullptr, &ret);
+        cl_mem c_mem_obj = clCreateBuffer(context, CL_MEM_WRITE_ONLY, MATRIX_SIZE * MATRIX_SIZE * sizeof(cl_short), nullptr, &ret);
+
+        // Копирование данных матриц в буферы
+        ret = clEnqueueWriteBuffer(command_queue, a_mem_obj, CL_TRUE, 0, MATRIX_SIZE * MATRIX_SIZE * sizeof(cl_short), A.data(), 0, nullptr, nullptr);
+        ret = clEnqueueWriteBuffer(command_queue, b_mem_obj, CL_TRUE, 0, MATRIX_SIZE * MATRIX_SIZE * sizeof(cl_short), B.data(), 0, nullptr, nullptr);
+
+        // Подготовка и компиляция OpenCL ядра
+        cl_program program = clCreateProgramWithSource(context, 1, (const char**)&kernelSource, nullptr, &ret);
+        ret = clBuildProgram(program, 1, &device_id, nullptr, nullptr, nullptr);
+
+        // Создание ядра
+        cl_kernel kernel = clCreateKernel(program, "matrix_multiply", &ret);
+
+        // Установка аргументов ядра
+        ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), (void*)&a_mem_obj);
+        ret = clSetKernelArg(kernel, 1, sizeof(cl_mem), (void*)&b_mem_obj);
+        ret = clSetKernelArg(kernel, 2, sizeof(cl_mem), (void*)&c_mem_obj);
+
+        // Выполнение ядра
+        size_t global_item_size[2] = { MATRIX_SIZE, MATRIX_SIZE };
+        size_t local_item_size[2] = { 1, 1 };
+        ret = clEnqueueNDRangeKernel(command_queue, kernel, 2, nullptr, global_item_size, local_item_size, 0, nullptr, nullptr);
+
+        // Чтение результата обратно в память CPU
+        ret = clEnqueueReadBuffer(command_queue, c_mem_obj, CL_TRUE, 0, MATRIX_SIZE * MATRIX_SIZE * sizeof(cl_short), C_gpu.data(), 0, nullptr, nullptr);
+
+        // Очистка ресурсов
+        ret = clFlush(command_queue);
+        ret = clFinish(command_queue);
+        ret = clReleaseKernel(kernel);
+        ret = clReleaseProgram(program);
+        ret = clReleaseMemObject(a_mem_obj);
+        ret = clReleaseMemObject(b_mem_obj);
+        ret = clReleaseMemObject(c_mem_obj);
+        ret = clReleaseCommandQueue(command_queue);
+        ret = clReleaseContext(context);
+
+        auto stop_gpu = std::chrono::high_resolution_clock::now();
+
+        std::cout << "Gpu multiplication time elapsed: " << std::chrono::duration_cast<std::chrono::milliseconds>(stop_gpu - start_gpu).count() << " ms\n";
+
+        auto start_cpu = std::chrono::high_resolution_clock::now();
+
+        cpu_matrix_multiply(A, B, C_cpu);
+
+        auto stop_cpu = std::chrono::high_resolution_clock::now();
+
+        std::cout << "Cpu multiplication time elapsed: " << std::chrono::duration_cast<std::chrono::milliseconds>(stop_cpu - start_cpu).count() << " ms\n";
+        
+
+        bool equal = true;
+        for (int i = 0; i < MATRIX_SIZE * MATRIX_SIZE; ++i) {
+            if (C_gpu[i] != C_cpu[i]) {
+                equal = false;
+                break;
+            }
+        }
+
+        if (equal) {
+            std::cout << "Matrices are equal\n";
+        }
+        else {
+            std::cout << "Matrices aren't equal\n";
+        }
+    }
+    
+    
 
     return 0;
 }
