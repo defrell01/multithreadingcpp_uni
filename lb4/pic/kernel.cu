@@ -15,7 +15,6 @@ __global__ void modifyChannels(const uchar* src, uchar* blueChannel, uchar* yell
         uchar green = src[idx * 3 + 1];
         uchar blue = src[idx * 3];
 
-        // Ваши формулы для модификации каналов:
         blueChannel[idx] = blue - (green + blue) / 2;
         yellowChannel[idx] = red + green - 2 * (abs(red - green) + blue);
     }

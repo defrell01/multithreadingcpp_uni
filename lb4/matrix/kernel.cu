@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include <iostream>
 
-#define BLOCK_SIZE 32 //16
+#define BLOCK_SIZE 32
 
 void getInfoCUDADevice(cudaDeviceProp& prop, int id) {
     printf("CUDA device %i name  - %s\n", id, prop.name);
@@ -63,20 +63,17 @@ int main() {
         std::cout << "Itteration number: " << iter + 1 << "\n";
         size_t byte_size = size * size * sizeof(int16_t);
 
-        // Allocate and initialize matrices
         int16_t* h_A = (int16_t*)malloc(byte_size);
         int16_t* h_B = (int16_t*)malloc(byte_size);
         int16_t* h_C = (int16_t*)malloc(byte_size);
         int16_t* CPU_C = (int16_t*)malloc(byte_size);
 
-        // Initialize matrices
         for (int i = 0; i < size * size; ++i) {
             h_A[i] = rand() % 100;
             h_B[i] = rand() % 100;
             CPU_C[i] = 0;
         }
 
-        // CPU (scalar) computation
         std::cout << "CPU: \n";
         cudaEventRecord(start, 0);
         for (int i = 0; i < size; ++i) {
@@ -92,7 +89,6 @@ int main() {
         cudaEventElapsedTime(&result_time_cpu, start, stop);
 		std::cout << "Elapsed time: " << result_time_cpu << " ms\n";
 
-        // GPU (device) computation
         std::cout << "GPU: \n";
 
         int16_t* d_A = NULL;
